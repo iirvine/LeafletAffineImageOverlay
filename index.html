@@ -6,23 +6,27 @@
         <link rel="stylesheet" href="./leaflet/leaflet.css" />
         <link rel="stylesheet" href="./style.css" />
         <script type="text/javascript">
-            require(['./LeafletAffineImageOverlay'], function(AffineOverlay) {
+            require(['./LeafletAffineImageOverlay', './AffineImageOverlay'], function(AffineOverlay1, AffineOverlay2) {
                 $(document).ready(function() {
-                    var map = init_map("map");
-                    var affineOverlay;
-                    var image = new Image();
+                    var map = init_map("map"),
+                        affineOverlay1,
+                        affineOverlay2,
+                        image = new Image();
 
                     image.onload = function() {
-                        affineOverlay = new AffineOverlay(
+                        affineOverlay1 = new AffineOverlay1(
                             map, image, 'theCanvas'
                         );
                     };
                     image.src = "./buildingLayer.png";
 
+
+
+
                     $("#theButton").on('click', function() {
-                        console.log(affineOverlay.getGcpList());
+                        console.log(affineOverlay1.getGcpList());
                     });
-                    
+
                     return;
                 });
             });
