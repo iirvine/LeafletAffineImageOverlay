@@ -1,16 +1,16 @@
-/*     
+/*
 * Copyright (c) 2012, John P. Kiffmeyer
 * All rights reserved.
-* 
+*
 * Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met: 
-* 
+* modification, are permitted provided that the following conditions are met:
+*
 * 1. Redistributions of source code must retain the above copyright notice, this
-*    list of conditions and the following disclaimer. 
+*    list of conditions and the following disclaimer.
 * 2. Redistributions in binary form must reproduce the above copyright notice,
 *    this list of conditions and the following disclaimer in the documentation
-*    and/or other materials provided with the distribution. 
-* 
+*    and/or other materials provided with the distribution.
+*
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,7 +26,7 @@
 *
 * A super-hacky overlay for leaflet[1] that lets you display an image on top of
 * the map, transform it using three anchors, and output ground control points
-* you can pass to gdal_translate.  (Rule #2: Inspired by Chris Broadfoot's 
+* you can pass to gdal_translate.  (Rule #2: Inspired by Chris Broadfoot's
 * overlay-tiler[2].)
 *
 * This should probably end up as a Leaflet layer object that you can add with
@@ -63,7 +63,7 @@ define(function(require) {
             // a value of 1.0, the image will be fitted to the map's viewport.
             // At a value of 0.5, the image will be fitted to half the map's
             // viewport, etc.
-            boundingScale: 0.75, 
+            boundingScale: 0.75,
         }, options);
 
         // Sets up the overlay
@@ -77,7 +77,7 @@ define(function(require) {
             return;
         }
 
-        // Sets up the listeners needed to keep the overlay canvas in sync with 
+        // Sets up the listeners needed to keep the overlay canvas in sync with
         // the markers on the map.
         function setupListeners() {
             map.on('move', render);
@@ -161,16 +161,16 @@ define(function(require) {
             return;
         }
 
-        // Converts a latlng on the world to a pixel coordinate in the map's 
+        // Converts a latlng on the world to a pixel coordinate in the map's
         // div.
         function latlngToContainerPoint(latlng) {
             var pixel_on_world = map.latLngToLayerPoint(latlng);
-            var pixel_in_container = 
+            var pixel_in_container =
                 map.layerPointToContainerPoint(pixel_on_world);
             return pixel_in_container;
         }
 
-        // Converts a pixel coordinate in the map's div to a latlng on the 
+        // Converts a pixel coordinate in the map's div to a latlng on the
         // world.
         function containerPointToLatlng(containerPoint) {
             var pixelOnWorld = map.containerPointToLayerPoint(containerPoint);
@@ -213,9 +213,9 @@ define(function(require) {
         }
 
         // Return a list of ground control points that reflect the current state
-        // of the overlay.  Ground control point objects have two attributes 
+        // of the overlay.  Ground control point objects have two attributes
         // containing two-element arrays that express a coordinate pair,
-        // image_location, and world_location.  The former being a pixel 
+        // image_location, and world_location.  The former being a pixel
         // location on the image (x,y), the later being a location on the world
         // (lng,lat).
         function getGcpList() {
@@ -231,7 +231,7 @@ define(function(require) {
             return gcps;
         }
 
-        // TODO other stuff: opacity control, show/hide markers, non-ass ui 
+        // TODO other stuff: opacity control, show/hide markers, non-ass ui
         // improvements, make an actual leaflet layer thing, probably more.
 
         init();

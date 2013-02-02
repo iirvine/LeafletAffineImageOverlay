@@ -11,7 +11,8 @@
                     var map = init_map("map"),
                         affineOverlay1,
                         affineOverlay2,
-                        image = new Image();
+                        image = new Image()
+                        options = {};
 
                     image.onload = function() {
                         affineOverlay1 = new AffineOverlay1(
@@ -20,8 +21,7 @@
                     };
                     image.src = "./buildingLayer.png";
 
-
-
+                    affineOverlay2 = L.affineImageOverlay('./buildingLayer.png', [0, 0], options).addTo(map);
 
                     $("#theButton").on('click', function() {
                         console.log(affineOverlay1.getGcpList());
