@@ -6,13 +6,12 @@
 L.AffineImageOverlay = L.Class.extend({
 	options: {
 		icon: L.Icon.Default,
-		boundingScale: .75,
 		opacity: .75,
 	},
 
-	initialize: function(url, center, options) {
+	initialize: function(url, initialTopLeft, options) {
 		this.url = url;
-		this.center = L.latLng(center);
+		this.initialTopLeft = L.latLng(initialTopLeft);
 		L.setOptions(this, options);
 	},
 
@@ -62,50 +61,43 @@ L.AffineImageOverlay = L.Class.extend({
 	},
 
 	setMarkers: function() {
-		var map = this.map,
-			mapSize = map.getSize().clone(),
-			boundedMapSize = mapSize.multiplyBy(this.options.boundingScale),
-			imageSize = L.point(this.image.width, this.image.height);
+		var imageAspectRatio = this.image.width / this.image.height,
+			width = 100,
+			height = width / imageAspectRatio,
+			topLeft = this.map.latLngToContainerPoint(this.initialTopLeft),
+			proj = this.map.containerPointToLatLng.bind(this.map);
 
-		var xBoundingPad = (mapSize.x - boundedMapSize.x) / 2;
-		var yBoundingPad = (mapSize.y - boundedMapSize.y) / 2;
+		var options = { draggable: true };
 
-		var mapAspectratio = boundedMapSize.x / boundedMapSize.y;
-		var imageAspectRatio = imageSize.x / imageSize.y;
-
-		var xPad = 0;
-		var yPad = 0;
-
-		if (mapAspectratio > imageAspectRatio) {
-			var imageScale = boundedMapSize.y / imageSize.y;
-			var scaledImageWidth = imageSize.x * imageScale;
-			xPad = (boundedMapSize.x - scaledImageWidth) / 2;
-		} else {
-			var imageScale = boundedMapSize.x / imageSize.x;
-			var scaledImageHeight = imageSize.y * imageScale;
-			yPad = (boundedMapSize.y - scaledImageHeight) / 2;
-		}
-
-		var north = yBoundingPad + yPad;
-		var south = mapSize.y - (yBoundingPad + yPad);
-		var west = xBoundingPad + xPad;
-		var east = mapSize.x - (xBoundingPad + xPad);
-
-		// var points = [L.point(west,north),
-		// 	L.point(east, north),
-		// 	L.point(east, south)];
-
-		var points =  [
-			L.marker(this.map.containerPointToLatLng([west, north]), {draggable: true}),
-			L.marker(this.map.containerPointToLatLng([east, north]), {draggable: true}),
-			L.marker(this.map.containerPointToLatLng([east, south]), {draggable: true})
+		var points = [
+			L.marker(this.initialTopLeft, options),
+			L.marker(proj([topLeft.x + width, topLeft.y]), options),			// Top Right
+			L.marker(proj([topLeft.x + width, topLeft.y + height]), options),   // Bottom Right
+			L.marker(proj([topLeft.x, topLeft.y + height]), options)  			// Bottom Left
 		];
 
-		this.markers = L.layerGroup(points).addTo(this.map);
+		this.bounds = L.latLngBounds([points[3].getLatLng(), points[1].getLatLng()]);
+		var rect = L.rectangle(this.bounds).addTo(this.map);
+
+		this.cornerMarkers = L.layerGroup(points).addTo(this.map);
+		this.centerMarker  = L.marker(this.bounds.getCenter(), options)
+			.addTo(this.map)
+			.on('move', this.move, this);
+	},
+
+	move: function(e) {
+		console.log(e);
 	},
 
 	render: function() {
+		var image   = this.image,
+		    topLeft = this.map.latLngToLayerPoint(this.bounds.getNorthWest()),
+		    size = this.map.latLngToLayerPoint(this.bounds.getSouthEast())._subtract(topLeft);
 
+		L.DomUtil.setPosition(image, topLeft);
+
+		image.style.width  = size.x + 'px';
+		image.style.height = size.y + 'px';
 	},
 
 	updateOpacity: function() {

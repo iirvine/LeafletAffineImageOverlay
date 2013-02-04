@@ -14,14 +14,16 @@
                         image = new Image()
                         options = {};
 
+                    options.boundingScale = .5;
                     image.onload = function() {
                         affineOverlay1 = new AffineOverlay1(
-                            map, image, 'theCanvas'
+                            map, image, 'theCanvas', options
                         );
                     };
                     image.src = "./buildingLayer.png";
 
-                    affineOverlay2 = L.affineImageOverlay('./buildingLayer.png', [0, 0], options).addTo(map);
+
+                    affineOverlay2 = L.affineImageOverlay('./buildingLayer.png', [0, 10], options).addTo(map);
 
                     $("#theButton").on('click', function() {
                         console.log(affineOverlay1.getGcpList());
