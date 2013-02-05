@@ -25,7 +25,7 @@ L.AffineImageOverlay = L.Class.extend({
 
 		// branch point - if we're drawing with canvas, implementation will start to differ here
 		map.getPanes().overlayPane.appendChild(this.image);
-		map.on('move', this.render, this);
+		map.on('viewreset', this.render, this);
 	},
 
 	onRemove: function(map) {
@@ -123,7 +123,6 @@ L.AffineImageOverlay = L.Class.extend({
 	},
 
 	render: function() {
-		L.DomUtil.setPosition(this.image, this.map.latLngToLayerPoint(this.points[0].getLatLng()));
 		this.image.style.webkitTransform = this.computeTransform();
 	},
 
