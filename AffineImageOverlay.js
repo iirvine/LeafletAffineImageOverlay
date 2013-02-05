@@ -1,6 +1,12 @@
 /*
 	TODO:
-		-lots of duplication btwn leaflet's standard image overlay class; consider subclassing?
+		-currently explicitly targeting webkit style tags; some amount of cross browser-ness would be keen
+		-better default initial image size
+		-zoom animations
+		-performance testing on laaaarge images
+		-canvas rendering fallback if css transforms aren't performant
+		-getting a bit monstrous - might get some SRP goodness by breaking concept of 'control points' into their own class?
+		-code cleanup
 */
 
 L.AffineImageOverlay = L.Class.extend({
@@ -23,7 +29,6 @@ L.AffineImageOverlay = L.Class.extend({
 			this.initImage();
 		}
 
-		// branch point - if we're drawing with canvas, implementation will start to differ here
 		map.getPanes().overlayPane.appendChild(this.image);
 		map.on('viewreset', this.render, this);
 	},
@@ -78,26 +83,58 @@ L.AffineImageOverlay = L.Class.extend({
 			L.marker(proj([topLeft.x + width, topLeft.y + height]), options),   // Bottom Right
 		];
 
-		this.bounds = L.latLngBounds([proj([topLeft.x, topLeft.y + height]), this.points[1].getLatLng()]);
-
 		this.cornerMarkers = L.layerGroup(this.points).addTo(this.map);
-		this.centerMarker  = L.marker(this.bounds.getCenter(), options)
-			.addTo(this.map)
-			.on('move', this.move, this);
+		var center = L.latLng(
+			(this.points[0].getLatLng().lat + this.points[2].getLatLng().lat) / 2,
+			(this.points[0].getLatLng().lng + this.points[2].getLatLng().lng) / 2);
 
-		this.initHooks();
+		this.centerMarker  = L.marker(center, options)
+			.addTo(this.map)
+			// .on('drag', this.move, this);
+
+		this.initMarkerHooks();
 		this.render();
 	},
 
-	initHooks: function() {
-		var overlay = this;
+	initMarkerHooks: function() {
+		var overlay = this,
+			dragging = false,
+			prevLatLng = null;
+
 		this.points.forEach(function(marker){
 			marker.on('drag', overlay.render, overlay);
+			marker.on('drag', overlay.reCenter, overlay);
+		});
+
+		this.centerMarker.on({
+			'dragstart': function(e) {
+				dragging = true;
+				prevLatLng = e.target.getLatLng();
+			},
+			'dragend': function() {
+				dragging = false;
+			},
+			'drag': function(e) {
+				var diffLat = e.target.getLatLng().lat - prevLatLng.lat,
+					diffLng = e.target.getLatLng().lng - prevLatLng.lng;
+
+				overlay.move(diffLat, diffLng);
+				prevLatLng = e.target.getLatLng();
+			}
 		});
 	},
 
-	move: function(e) {
-		console.log(e);
+	reCenter: function() {
+		this.centerMarker.setLatLng(L.latLng(
+			(this.points[0].getLatLng().lat + this.points[2].getLatLng().lat) / 2,
+			(this.points[0].getLatLng().lng + this.points[2].getLatLng().lng) / 2));
+	},
+
+	move: function(diffLat, diffLng) {
+		this.points.forEach(function(marker){
+			marker.setLatLng(L.latLng(marker.getLatLng().lat + diffLat, marker.getLatLng().lng + diffLng));
+		});
+		this.render();
 	},
 
 	controlPointsInContainerPixels: function() {
