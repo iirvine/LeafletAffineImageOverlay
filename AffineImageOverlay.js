@@ -4,6 +4,8 @@
 */
 
 L.AffineImageOverlay = L.Class.extend({
+	includes: L.Mixin.Events,
+
 	options: {
 		icon: L.Icon.Default,
 		opacity: .75,
@@ -23,7 +25,7 @@ L.AffineImageOverlay = L.Class.extend({
 
 		// branch point - if we're drawing with canvas, implementation will start to differ here
 		map.getPanes().overlayPane.appendChild(this.image);
-		map.on('viewreset', this.render, this);
+		map.on('move', this.render, this);
 	},
 
 	onRemove: function(map) {
@@ -67,37 +69,62 @@ L.AffineImageOverlay = L.Class.extend({
 			topLeft = this.map.latLngToContainerPoint(this.initialTopLeft),
 			proj = this.map.containerPointToLatLng.bind(this.map);
 
+		this.image.style.webkitTransformOrigin = '0 0'
 		var options = { draggable: true };
 
-		var points = [
+		this.points = [
 			L.marker(this.initialTopLeft, options),
 			L.marker(proj([topLeft.x + width, topLeft.y]), options),			// Top Right
 			L.marker(proj([topLeft.x + width, topLeft.y + height]), options),   // Bottom Right
-			L.marker(proj([topLeft.x, topLeft.y + height]), options)  			// Bottom Left
 		];
 
-		this.bounds = L.latLngBounds([points[3].getLatLng(), points[1].getLatLng()]);
-		var rect = L.rectangle(this.bounds).addTo(this.map);
+		this.bounds = L.latLngBounds([proj([topLeft.x, topLeft.y + height]), this.points[1].getLatLng()]);
 
-		this.cornerMarkers = L.layerGroup(points).addTo(this.map);
+		this.cornerMarkers = L.layerGroup(this.points).addTo(this.map);
 		this.centerMarker  = L.marker(this.bounds.getCenter(), options)
 			.addTo(this.map)
 			.on('move', this.move, this);
+
+		this.initHooks();
+		this.render();
+	},
+
+	initHooks: function() {
+		var overlay = this;
+		this.points.forEach(function(marker){
+			marker.on('drag', overlay.render, overlay);
+		});
 	},
 
 	move: function(e) {
 		console.log(e);
 	},
 
+	controlPointsInContainerPixels: function() {
+		var map = this.map;
+		return this.points.map(function(marker) {
+			return map.latLngToContainerPoint(marker.getLatLng())
+		});
+	},
+
+	computeTransform: function() {
+		var controlPoints = this.controlPointsInContainerPixels(),
+			topLeft = controlPoints[0],
+			topRight = controlPoints[1]
+			bottomRight = controlPoints[2];
+
+		return "matrix(" +
+			[(topRight.x - topLeft.x)/this.image.width,
+			(topRight.y - topLeft.y)/this.image.width,
+			(bottomRight.x - topRight.x)/this.image.height,
+			(bottomRight.y - topRight.y)/this.image.height,
+			this.map.latLngToLayerPoint(this.points[0].getLatLng()).x, this.map.latLngToLayerPoint(this.points[0].getLatLng()).y]
+		 + ")"
+	},
+
 	render: function() {
-		var image   = this.image,
-		    topLeft = this.map.latLngToLayerPoint(this.bounds.getNorthWest()),
-		    size = this.map.latLngToLayerPoint(this.bounds.getSouthEast())._subtract(topLeft);
-
-		L.DomUtil.setPosition(image, topLeft);
-
-		image.style.width  = size.x + 'px';
-		image.style.height = size.y + 'px';
+		L.DomUtil.setPosition(this.image, this.map.latLngToLayerPoint(this.points[0].getLatLng()));
+		this.image.style.webkitTransform = this.computeTransform();
 	},
 
 	updateOpacity: function() {
