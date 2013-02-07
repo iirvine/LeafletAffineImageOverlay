@@ -116,11 +116,9 @@
 				'dragstart': function(e) {
 					dragging = true;
 					prevLatLng = e.target.getLatLng();
-					console.log("Dragging from layer point %O", this.map.latLngToLayerPoint(e.target.getLatLng()));
 				},
 				'dragend': function(e) {
 					dragging = false;
-					console.log("Dropping at layer point %O", this.map.latLngToLayerPoint(e.target.getLatLng()));
 				},
 				'drag': function(e) {
 					var diffLat = e.target.getLatLng().lat - prevLatLng.lat,

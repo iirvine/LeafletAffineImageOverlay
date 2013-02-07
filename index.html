@@ -15,7 +15,7 @@
                         options = {};
 
 
-                    affineOverlay2 = L.affineImageOverlay('./Venetian.svg', map.getCenter(), options).addTo(map);
+                    affineOverlay2 = L.affineImageOverlay('./buildingLayer.png', map.getCenter(), options).addTo(map);
 
                     $("#theButton").on('click', function() {
                         console.log(affineOverlay1.getGcpList());
@@ -38,7 +38,7 @@
                     tileUrl,
                     {maxZoom: 21, attribution: tileAttrib}
                 );
-                map.setView([36.121837,-115.168413], 17).addLayer(tiles);
+                map.setView([0,0], 5).addLayer(tiles);
 
                 return map;
             }
