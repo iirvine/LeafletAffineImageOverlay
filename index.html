@@ -2,28 +2,20 @@
     <head>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
         <script type="text/javascript" src="http://requirejs.org/docs/release/1.0.7/minified/require.js"></script>
-        <script type="text/javascript" src="./leaflet/leaflet.js"></script>
+        <script type="text/javascript" src="./leaflet/leaflet-src.js"></script>
         <link rel="stylesheet" href="./leaflet/leaflet.css" />
         <link rel="stylesheet" href="./style.css" />
         <script type="text/javascript">
             require(['./LeafletAffineImageOverlay', './AffineImageOverlay'], function(AffineOverlay1, AffineOverlay2) {
                 $(document).ready(function() {
-                    var map = init_map("map"),
+                    var map = window.map = init_map("map"),
                         affineOverlay1,
                         affineOverlay2,
                         image = new Image()
                         options = {};
 
-                    options.boundingScale = .5;
-                    image.onload = function() {
-                        affineOverlay1 = new AffineOverlay1(
-                            map, image, 'theCanvas', options
-                        );
-                    };
-                    image.src = "./buildingLayer.png";
 
-
-                    affineOverlay2 = L.affineImageOverlay('./buildingLayer.png', [0, 10], options).addTo(map);
+                    affineOverlay2 = L.affineImageOverlay('./Venetian.svg', map.getCenter(), options).addTo(map);
 
                     $("#theButton").on('click', function() {
                         console.log(affineOverlay1.getGcpList());
@@ -36,7 +28,7 @@
             function init_map(map_div) {
                 var map = new L.Map(map_div);
                 var tileUrl =
-                    'http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg';
+                    'http://otile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg';
                 var tileAttrib = // Rule #2: Give credit where it's due.
                     '&copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> ' +
                     'contributors, CC-BY-SA, Tiles Courtesy of ' +
@@ -44,9 +36,9 @@
                     'MapQuest</a>';
                 var tiles = new L.TileLayer(
                     tileUrl,
-                    {maxZoom: 17, attribution: tileAttrib}
+                    {maxZoom: 21, attribution: tileAttrib}
                 );
-                map.setView(new L.LatLng(0,0), 5).addLayer(tiles);
+                map.setView([36.121837,-115.168413], 17).addLayer(tiles);
 
                 return map;
             }
