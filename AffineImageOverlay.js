@@ -1,4 +1,4 @@
-(AffineImageOverlay = function(L) {
+(function(L) {
 
 	L.affineImageOverlay = function(url, center, options) {
 		return new L.AffineImageOverlay(url, center, options);
@@ -167,7 +167,5 @@
 
 			this.fire('change');
 		},
-
 	});
-
 })(L);
