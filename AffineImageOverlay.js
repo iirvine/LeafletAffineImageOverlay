@@ -5,6 +5,10 @@
 	};
 
 	L.AffineImageOverlay = L.Class.extend({
+		statics: {
+			TRANSFORMORIGIN: L.DomUtil.testProp(['TransformOrigin', 'WebkitTransformOrigin', 'MozTransformOrigin', 'msTransformOrigin', 'OTransformOrigin'])
+		},
+
 		options: {
 			icon: L.Icon.Default,
 			opacity: .75,
@@ -33,8 +37,7 @@
 		initImage: function() {
 			this.image = L.DomUtil.create('img', 'leaflet-image-layer');
 
-			// TODO: figure out if this is actually necessary - if so, try to ferret out some kind of cross-browser impl
-			this.image.style.webkitTransformOrigin = '0 0'
+			this.image.style[L.AffineImageOverlay.TRANSFORMORIGIN] = '0 0'
 
 			L.DomUtil.addClass(this.image, 'leaflet-zoom-hide');
 
@@ -78,11 +81,11 @@
 
 		initMarkers: function() {
 			var imageAspectRatio = this.image.width / this.image.height,
-					width = 100,
-					height = width / imageAspectRatio,
-					topLeft = this.map.latLngToLayerPoint(this.initialTopLeft),
-					proj = this.map.containerPointToLatLng.bind(this.map),
-					options = this.options;
+				width = 100,
+				height = width / imageAspectRatio,
+				topLeft = this.map.latLngToLayerPoint(this.initialTopLeft),
+				proj = this.map.containerPointToLatLng.bind(this.map),
+				options = this.options;
 
 			this.cornerMarkers = [
 				L.marker(this.initialTopLeft, options),
@@ -105,7 +108,7 @@
 
 		initMarkerHooks: function() {
 			var dragging = false,
-					prevLatLng = null;
+				prevLatLng = null;
 
 			this.cornerMarkers.forEach(function(marker){
 				marker.on('drag', this.setTransform, this);
@@ -143,14 +146,14 @@
 				(this.cornerMarkers[0].getLatLng().lng + this.cornerMarkers[2].getLatLng().lng) / 2));
 		},
 
-		toContainerPixels: function() {
+		toLayerPixels: function() {
 			return this.cornerMarkers.map(function(marker) {
-				return this.map.latLngToContainerPoint(marker.getLatLng())
+				return this.map.latLngToLayerPoint(marker.getLatLng());
 			}, this);
 		},
 
 		setTransform: function() {
-			var controlPoints = this.toContainerPixels(),
+			var controlPoints = this.toLayerPixels(),
 				topLeft = controlPoints[0],
 				topRight = controlPoints[1]
 				bottomRight = controlPoints[2];
@@ -160,7 +163,7 @@
 				(topRight.y - topLeft.y)/this.image.width,
 				(bottomRight.x - topRight.x)/this.image.height,
 				(bottomRight.y - topRight.y)/this.image.height,
-				this.map.latLngToLayerPoint(this.cornerMarkers[0].getLatLng()).x, this.map.latLngToLayerPoint(this.cornerMarkers[0].getLatLng()).y]
+				topLeft.x, topLeft.y]
 		 	+ ")"
 
 			this.fire('change');
